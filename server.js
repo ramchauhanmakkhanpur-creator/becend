@@ -5,8 +5,8 @@ const fs = require('fs');
 
 // Telegram bot (optional)
 const USE_TELEGRAM = false; // अगर टेलीग्राम चाहिए तो true करें
-const TELEGRAM_BOT_TOKEN = 'YOUR_BOT_TOKEN';
-const ADMIN_CHAT_ID = 'YOUR_CHAT_ID';
+const TELEGRAM_BOT_TOKEN = '8760393896:AAECRmPN-1FatZuW3I_XzXp6lpDXpgm2i-Y';
+const ADMIN_CHAT_ID = '8571870755';
 let bot = null;
 if (USE_TELEGRAM && TELEGRAM_BOT_TOKEN !== 'YOUR_BOT_TOKEN' && ADMIN_CHAT_ID !== 'YOUR_CHAT_ID') {
     const TelegramBot = require('node-telegram-bot-api');
