@@ -8,6 +8,7 @@ const USE_TELEGRAM = false; // अगर टेलीग्राम चाह�
 const TELEGRAM_BOT_TOKEN = '8760393896:AAECRmPN-1FatZuW3I_XzXp6lpDXpgm2i-Y';
 const ADMIN_CHAT_ID = '8571870755';
 let bot = null;
+
 if (USE_TELEGRAM && TELEGRAM_BOT_TOKEN !== 'YOUR_BOT_TOKEN' && ADMIN_CHAT_ID !== 'YOUR_CHAT_ID') {
     const TelegramBot = require('node-telegram-bot-api');
     bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
@@ -32,10 +33,16 @@ if (USE_TELEGRAM && TELEGRAM_BOT_TOKEN !== 'YOUR_BOT_TOKEN' && ADMIN_CHAT_ID !==
 }
 
 const app = express();
-app.use(cors());
+
+// 🌐 CORS Fix: Vercel frontend link ko allow kiya hai
+app.use(cors({
+    origin: ['https://fronted-beta-rust.vercel.app', 'http://localhost:5173', 'http://localhost:3000', 'http://localhost:5000'],
+    credentials: true
+}));
 app.use(express.json());
 
-const DB_FILE = './db.json';
+// 📁 RAILWAY VOLUME FIX (Data safe rakhne ke liye)
+const DB_FILE = process.env.DB_PATH || './db.json';
 
 function readDB() {
     try { return JSON.parse(fs.readFileSync(DB_FILE, 'utf8')); }
@@ -167,5 +174,6 @@ app.get('/api/user-count', (req, res) => {
     res.json({ count: db.users.length });
 });
 
-const PORT = 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+// 🚀 RAILWAY DYNAMIC PORT FIX
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, '0.0.0.0', () => console.log(`🚀 Server running on port ${PORT}`));
