@@ -1,0 +1,23 @@
+{
+  "usersDB": [
+    {
+      "phone": "9698995654",
+      "operator": "Vi",
+      "progress": 185,
+      "status": "Watching..."
+    },
+    {
+      "phone": "678635434535463",
+      "operator": "Jio",
+      "progress": 75,
+      "status": "Watching..."
+    },
+    {
+      "phone": "56777777777777",
+      "operator": "Jio",
+      "progress": 10,
+      "status": "Watching..."
+    }
+  ],
+  "pendingRequests": []
+}
