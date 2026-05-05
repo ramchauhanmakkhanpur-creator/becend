@@ -4,9 +4,9 @@ const ytSearch = require('yt-search');
 const fs = require('fs');
 
 // ⚡ Telegram बॉट (जब चाहें तब चालू करें)
-const USE_TELEGRAM = false; // true करें और नीचे टोकन + चैट आईडी डालें
-const TELEGRAM_BOT_TOKEN = '8760393896:AAECRmPN-1FatZuW3I_XzXp6lpDXpgm2i-Y';
-const ADMIN_CHAT_ID = '8571870755';
+const USE_TELEGRAM = false;
+const TELEGRAM_BOT_TOKEN = 'YOUR_BOT_TOKEN_HERE';
+const ADMIN_CHAT_ID = 'YOUR_ADMIN_CHAT_ID';
 
 let bot = null;
 if (USE_TELEGRAM && TELEGRAM_BOT_TOKEN !== 'YOUR_BOT_TOKEN_HERE' && ADMIN_CHAT_ID !== 'YOUR_ADMIN_CHAT_ID') {
@@ -29,11 +29,17 @@ if (USE_TELEGRAM && TELEGRAM_BOT_TOKEN !== 'YOUR_BOT_TOKEN_HERE' && ADMIN_CHAT_I
         bot.sendMessage(chatId, `✅ रिचार्ज अप्रूव्ड (User: ${user?.name || userId})`);
     });
 } else {
-    console.log('ℹ️ Telegram bot disabled. Set USE_TELEGRAM=true and provide token/chat ID to enable.');
+    console.log('ℹ️ Telegram bot disabled.');
 }
 
 const app = express();
-app.use(cors());
+
+// 🔓 CORS – अपने Vercel डोमेन को अनुमति दें
+const ALLOWED_ORIGIN = 'https://fronted-beta-rust.vercel.app'; // बिना आखिरी स्लैश के
+app.use(cors({
+    origin: ALLOWED_ORIGIN,
+    credentials: true
+}));
 app.use(express.json());
 
 const DB_FILE = './db.json';
@@ -167,5 +173,5 @@ app.get('/api/user-count', (req, res) => {
     res.json({ count: db.users.length });
 });
 
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
