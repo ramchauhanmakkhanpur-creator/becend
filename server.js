@@ -3,46 +3,40 @@ const cors = require('cors');
 const ytSearch = require('yt-search');
 const fs = require('fs');
 
-// Telegram bot (optional)
-const USE_TELEGRAM = false; // अगर टेलीग्राम चाहिए तो true करें
+// ⚡ Telegram बॉट (जब चाहें तब चालू करें)
+const USE_TELEGRAM = false; // true करें और नीचे टोकन + चैट आईडी डालें
 const TELEGRAM_BOT_TOKEN = '8760393896:AAECRmPN-1FatZuW3I_XzXp6lpDXpgm2i-Y';
 const ADMIN_CHAT_ID = '8571870755';
-let bot = null;
 
-if (USE_TELEGRAM && TELEGRAM_BOT_TOKEN !== 'YOUR_BOT_TOKEN' && ADMIN_CHAT_ID !== 'YOUR_CHAT_ID') {
+let bot = null;
+if (USE_TELEGRAM && TELEGRAM_BOT_TOKEN !== 'YOUR_BOT_TOKEN_HERE' && ADMIN_CHAT_ID !== 'YOUR_ADMIN_CHAT_ID') {
     const TelegramBot = require('node-telegram-bot-api');
     bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
     bot.onText(/\/approve (.+)/, (msg, match) => {
         const chatId = msg.chat.id;
         const userId = match[1].trim();
         if (chatId.toString() !== ADMIN_CHAT_ID.toString()) {
-            bot.sendMessage(chatId, '❌ Unauthorized');
+            bot.sendMessage(chatId, '❌ आप authorized नहीं हैं।');
             return;
         }
         const db = readDB();
         const request = db.requests.find(r => r.userId === userId);
-        if (!request) return bot.sendMessage(chatId, '❌ Request not found');
+        if (!request) return bot.sendMessage(chatId, '❌ कोई रिक्वेस्ट नहीं मिली।');
         request.status = 'approved';
         const user = db.users.find(u => u.id === userId);
         if (user) user.mb = 0;
         writeDB(db);
-        bot.sendMessage(chatId, `✅ Recharge Approved (User: ${user?.name || userId})`);
+        bot.sendMessage(chatId, `✅ रिचार्ज अप्रूव्ड (User: ${user?.name || userId})`);
     });
 } else {
-    console.log('ℹ️ Telegram bot disabled.');
+    console.log('ℹ️ Telegram bot disabled. Set USE_TELEGRAM=true and provide token/chat ID to enable.');
 }
 
 const app = express();
-
-// 🌐 CORS Fix: Vercel frontend link ko allow kiya hai
-app.use(cors({
-    origin: ['https://fronted-beta-rust.vercel.app', 'http://localhost:5173', 'http://localhost:3000', 'http://localhost:5000'],
-    credentials: true
-}));
+app.use(cors());
 app.use(express.json());
 
-// 📁 RAILWAY VOLUME FIX (Data safe rakhne ke liye)
-const DB_FILE = process.env.DB_PATH || './db.json';
+const DB_FILE = './db.json';
 
 function readDB() {
     try { return JSON.parse(fs.readFileSync(DB_FILE, 'utf8')); }
@@ -50,7 +44,7 @@ function readDB() {
 }
 function writeDB(db) { fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2)); }
 
-// Video API
+// वीडियो एंडपॉइंट
 const homeKeywords = ["vlog india", "podcast hindi", "tech reviews india", "indian web series", "roast video hindi", "stand up comedy hindi", "travel vlog india", "shark tank india"];
 
 app.get('/api/videos', async (req, res) => {
@@ -80,7 +74,7 @@ app.get('/api/videos', async (req, res) => {
     }
 });
 
-// User APIs
+// यूज़र APIs
 app.post('/api/signup', (req, res) => {
     const { name, password } = req.body;
     if (!name || !password) return res.status(400).json({ error: 'Name and password required' });
@@ -130,7 +124,6 @@ app.post('/api/toggle-earn/:id', (req, res) => {
     if (!user) return res.status(404).json({ error: 'User not found' });
     user.earnData = !user.earnData;
     writeDB(db);
-    console.log(`🔄 Toggle earnData for ${user.name} → ${user.earnData}`);
     res.json({ earnData: user.earnData });
 });
 
@@ -174,6 +167,5 @@ app.get('/api/user-count', (req, res) => {
     res.json({ count: db.users.length });
 });
 
-// 🚀 RAILWAY DYNAMIC PORT FIX
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, '0.0.0.0', () => console.log(`🚀 Server running on port ${PORT}`));
+const PORT = 5000;
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
