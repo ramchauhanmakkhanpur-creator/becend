@@ -4,7 +4,7 @@ const ytSearch = require('yt-search');
 const fs = require('fs');
 
 // ⚡ Telegram बॉट (जब चाहें तब चालू करें)
-const USE_TELEGRAM = false;
+const USE_TELEGRAM = false; // true करें और नीचे टोकन + चैट आईडी डालें
 const TELEGRAM_BOT_TOKEN = 'YOUR_BOT_TOKEN_HERE';
 const ADMIN_CHAT_ID = 'YOUR_ADMIN_CHAT_ID';
 
@@ -29,17 +29,11 @@ if (USE_TELEGRAM && TELEGRAM_BOT_TOKEN !== 'YOUR_BOT_TOKEN_HERE' && ADMIN_CHAT_I
         bot.sendMessage(chatId, `✅ रिचार्ज अप्रूव्ड (User: ${user?.name || userId})`);
     });
 } else {
-    console.log('ℹ️ Telegram bot disabled.');
+    console.log('ℹ️ Telegram bot disabled. Set USE_TELEGRAM=true and provide token/chat ID to enable.');
 }
 
 const app = express();
-
-// 🔓 CORS – अपने Vercel डोमेन को अनुमति दें
-const ALLOWED_ORIGIN = 'https://fronted-beta-rust.vercel.app'; // बिना आखिरी स्लैश के
-app.use(cors({
-    origin: ALLOWED_ORIGIN,
-    credentials: true
-}));
+app.use(cors());
 app.use(express.json());
 
 const DB_FILE = './db.json';
@@ -50,10 +44,10 @@ function readDB() {
 }
 function writeDB(db) { fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2)); }
 
-// वीडियो एंडपॉइंट
 const homeKeywords = ["vlog india", "podcast hindi", "tech reviews india", "indian web series", "roast video hindi", "stand up comedy hindi", "travel vlog india", "shark tank india"];
 
-app.get('/api/videos', async (req, res) => {
+// 🟢 FIX 1: Routes ko frontend ke hisaab se theek kiya gaya hai (Removed '/api/')
+app.get('/videos', async (req, res) => {
     const { q = 'trending', page = 1, type = 'search' } = req.query;
     try {
         let searchQuery = q;
@@ -81,7 +75,7 @@ app.get('/api/videos', async (req, res) => {
 });
 
 // यूज़र APIs
-app.post('/api/signup', (req, res) => {
+app.post('/signup', (req, res) => {
     const { name, password } = req.body;
     if (!name || !password) return res.status(400).json({ error: 'Name and password required' });
     const db = readDB();
@@ -92,7 +86,7 @@ app.post('/api/signup', (req, res) => {
     res.json({ id: newUser.id, name: newUser.name, mb: newUser.mb, earnData: newUser.earnData });
 });
 
-app.post('/api/login', (req, res) => {
+app.post('/login', (req, res) => {
     const { name, password } = req.body;
     const db = readDB();
     const user = db.users.find(u => u.name === name && u.password === password);
@@ -100,7 +94,7 @@ app.post('/api/login', (req, res) => {
     res.json({ id: user.id, name: user.name, mb: user.mb, earnData: user.earnData });
 });
 
-app.get('/api/user/:id', (req, res) => {
+app.get('/user/:id', (req, res) => {
     const db = readDB();
     const user = db.users.find(u => u.id === req.params.id);
     if (!user) return res.status(404).json({ error: 'User not found' });
@@ -113,7 +107,7 @@ app.get('/api/user/:id', (req, res) => {
     });
 });
 
-app.post('/api/earn-mb/:id', (req, res) => {
+app.post('/earn-mb/:id', (req, res) => {
     const db = readDB();
     const user = db.users.find(u => u.id === req.params.id);
     if (!user) return res.status(404).json({ error: 'User not found' });
@@ -124,7 +118,7 @@ app.post('/api/earn-mb/:id', (req, res) => {
     res.json({ mb: user.mb });
 });
 
-app.post('/api/toggle-earn/:id', (req, res) => {
+app.post('/toggle-earn/:id', (req, res) => {
     const db = readDB();
     const user = db.users.find(u => u.id === req.params.id);
     if (!user) return res.status(404).json({ error: 'User not found' });
@@ -133,7 +127,7 @@ app.post('/api/toggle-earn/:id', (req, res) => {
     res.json({ earnData: user.earnData });
 });
 
-app.post('/api/recharge-request/:id', (req, res) => {
+app.post('/recharge-request/:id', (req, res) => {
     const { mobile, sim } = req.body;
     if (!mobile || !sim) return res.status(400).json({ error: 'Mobile and sim required' });
     const db = readDB();
@@ -156,7 +150,7 @@ app.post('/api/recharge-request/:id', (req, res) => {
     res.json({ message: 'Recharge request sent for approval', status: 'pending' });
 });
 
-app.post('/api/approve-recharge', (req, res) => {
+app.post('/approve-recharge', (req, res) => {
     const { userId } = req.body;
     const db = readDB();
     const request = db.requests.find(r => r.userId === userId);
@@ -168,10 +162,13 @@ app.post('/api/approve-recharge', (req, res) => {
     res.json({ message: 'Recharge approved', status: 'approved' });
 });
 
-app.get('/api/user-count', (req, res) => {
+app.get('/user-count', (req, res) => {
     const db = readDB();
     res.json({ count: db.users.length });
 });
 
+// 🟢 FIX 2: app.listen add kar diya hai taaki server successfully start ho sake.
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT, () => {
+    console.log(`✅ Backend server is running and listening on port ${PORT}`);
+});
